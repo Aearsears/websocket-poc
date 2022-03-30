@@ -1,5 +1,4 @@
-import { WebSocketServer } from 'ws';
-import express, { Express, Request, Response } from 'express';
+import { WebSocket, WebSocketServer, RawData } from 'ws';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.dev.local' });
@@ -20,20 +19,39 @@ const getUniqueID = () => {
     return s4() + s4() + '-' + s4();
 };
 
-wss.on('connection', function connection(ws, req) {
+wss.on('connection', function connection(ws, request) {
     let userID = getUniqueID();
-    let userIP = req.socket.remoteAddress;
+    let userIP = request.socket.remoteAddress;
     console.log(
         new Date() + ' Recieved a new connection from origin ' + userIP + '.'
     );
     // You can rewrite this part of the code to accept only the requests from allowed origin
     clients.push({ userID: userIP });
 
-    ws.on('message', function message(data) {
-        console.log('received: %s', data);
+    ws.on('message', function incoming(message: RawData, isBinary: boolean) {
+        wss.clients.forEach(function each(client) {
+            client.send(
+                JSON.stringify({
+                    name: 'George',
+                    message: message.toString()
+                })
+            );
+
+            ws.send(
+                JSON.stringify({
+                    name: 'George',
+                    message: 'message received from server!'
+                })
+            );
+        });
     });
 
-    ws.send('something');
+    ws.send(
+        JSON.stringify({
+            name: 'George',
+            message: 'Welcome to the chat server!'
+        })
+    );
     ws.on('close', () => {
         console.log('closed connection');
     });
