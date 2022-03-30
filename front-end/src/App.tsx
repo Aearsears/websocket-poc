@@ -2,7 +2,8 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
-
+import Chat from './Chat';
+//
 const client = new W3CWebSocket('ws://localhost:4000');
 
 client.onopen = () => {
@@ -21,18 +22,9 @@ function App() {
         <div className="App">
             <header className="App-header">
                 <img src={logo} className="App-logo" alt="logo" />
-                <p>
-                    Edit <code>src/App.tsx</code> and save to reload.
-                </p>
-                <a
-                    className="App-link"
-                    href="https://reactjs.org"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    Learn React
-                </a>
+                <h1 className="App-title">Welcome to React</h1>
             </header>
+            <Chat />
         </div>
     );
 }
