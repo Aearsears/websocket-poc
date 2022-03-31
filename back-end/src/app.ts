@@ -1,4 +1,4 @@
-import { WebSocket, WebSocketServer, RawData } from 'ws';
+import { WebSocketServer, RawData } from 'ws';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.dev.local' });
@@ -25,7 +25,7 @@ wss.on('connection', function connection(ws, request) {
     console.log(
         new Date() + ' Recieved a new connection from origin ' + userIP + '.'
     );
-    // You can rewrite this part of the code to accept only the requests from allowed origin
+
     clients.push({ userID: userIP });
 
     ws.on('message', function incoming(message: RawData, isBinary: boolean) {
@@ -33,17 +33,16 @@ wss.on('connection', function connection(ws, request) {
             client.send(
                 JSON.stringify({
                     name: 'George',
-                    message: message.toString()
-                })
-            );
-
-            ws.send(
-                JSON.stringify({
-                    name: 'George',
                     message: 'message received from server!'
                 })
             );
         });
+        ws.send(
+            JSON.stringify({
+                name: 'George',
+                message: message.toString()
+            })
+        );
     });
 
     ws.send(
