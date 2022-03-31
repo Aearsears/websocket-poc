@@ -3,12 +3,20 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.dev.local' });
 
+interface Message {
+    name: string;
+    message: string;
+}
+interface Client {
+    userID: string;
+    userIP: string;
+}
+
 const port = process.env.PORT;
 
 const wss = new WebSocketServer({ port: Number(port) });
 
-// I'm maintaining all active connections in this object
-const clients = [{}];
+const clients: { [id: string]: Client } = {};
 
 // This code generates unique userid for everyuser.
 const getUniqueID = () => {
@@ -21,37 +29,37 @@ const getUniqueID = () => {
 
 wss.on('connection', function connection(ws, request) {
     let userID = getUniqueID();
-    let userIP = request.socket.remoteAddress;
+    let userIP = request.socket.remoteAddress as string;
     console.log(
         new Date() + ' Recieved a new connection from origin ' + userIP + '.'
     );
-
-    clients.push({ userID: userIP });
+    clients[userID] = { userID, userIP };
 
     ws.on('message', function incoming(message: RawData, isBinary: boolean) {
+        let parsed: Message = JSON.parse(message.toString());
         wss.clients.forEach(function each(client) {
             client.send(
                 JSON.stringify({
-                    name: 'George',
-                    message: 'message received from server!'
+                    name: parsed.name,
+                    message: parsed.message
                 })
             );
         });
-        ws.send(
-            JSON.stringify({
-                name: 'George',
-                message: message.toString()
-            })
-        );
     });
 
     ws.send(
         JSON.stringify({
-            name: 'George',
+            name: 'Server',
             message: 'Welcome to the chat server!'
         })
     );
+    ws.send(JSON.stringify(clients));
+    setInterval(() => {
+        ws.send(JSON.stringify(clients));
+    }, 1000);
+
     ws.on('close', () => {
+        delete clients[userID];
         console.log('closed connection');
     });
 });

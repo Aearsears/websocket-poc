@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import ChatInput from './ChatInput';
 import ChatMessage from './ChatMessage';
+import ChatNode from './ChatNode';
 
 const URL = 'ws://localhost:4000';
 interface State {
     name: string;
     messages: Message[];
     ws: WebSocket | null;
+    chatNodes: JSX.Element[];
 }
 interface Props {}
 interface Message {
@@ -17,7 +19,8 @@ class Chat extends Component<Props, State> {
     state: State = {
         name: 'Bob',
         messages: [],
-        ws: null
+        ws: null,
+        chatNodes: []
     };
     ws!: WebSocket;
     componentDidMount() {
@@ -31,8 +34,13 @@ class Chat extends Component<Props, State> {
             // on receiving a message, add it to the list of messages
             const message = JSON.parse(evt.data);
             console.log(message);
-
-            this.addMessage(message);
+            if (message.message) {
+                this.addMessage(message);
+            } else {
+                this.setState((state) => ({
+                    chatNodes: [message, ...state.chatNodes]
+                }));
+            }
         };
 
         this.ws.onclose = () => {
@@ -41,6 +49,9 @@ class Chat extends Component<Props, State> {
             this.setState({
                 ws: new WebSocket(URL)
             });
+        };
+        this.ws.onerror = (event: Event) => {
+            console.error('error');
         };
     }
 
@@ -85,6 +96,12 @@ class Chat extends Component<Props, State> {
                         name={message.name}
                     />
                 ))}
+                <ChatNode name={this.state.name}></ChatNode>
+                {this.state.chatNodes.length > 0
+                    ? this.state.chatNodes.map((value) => {
+                          return <ChatNode name="yes"></ChatNode>;
+                      })
+                    : null}
             </div>
         );
     }
